@@ -1,0 +1,56 @@
+model{
+    # model based on Høyland et al., 10.1016/j.jdeveco.2011.01.007
+    # and Jackman, Bayesian Analysis for the Social Sciences
+    
+    for(i in 1:N){                  # loop over observations
+        for(j in 1:K){              # loop over indicators
+            mu[i,j] <- beta[j, 1] + beta[j, 2]*x[i] + delta[i, grps[j]]
+            y[i,j] ~ dnorm(mu[i,j], tau[j])
+        }
+    }
+
+    for(i in 1:N){                  # hierarchical model for x
+        mu_x[i] <- alpha[level[i]] # select alpha for this obs
+        x[i] ~ dnorm(mu_x[i], 1)
+    }
+  
+    for (i in 1:N){                 # allow correlation between factors
+        for (k in 1:ngrp){
+            delta[i, k] ~ dnorm(0, prec_sigma_delta[k])
+        }
+    }
+    for (k in 1:ngrp){
+        sigma_delta[k] ~ dunif(0, grpr[k])
+        prec_sigma_delta[k] <- pow(sigma_delta[k], -2)
+    }
+
+    # priors
+    for(j in 1:K){                  # measurement parameters
+        beta[j, 1:2] ~ dmnorm(g0[1:2],G0[1:2, 1:2])
+        # beta[j, 2] <- g0[j]
+        # beta[j, 1] ~ dnorm(0, 1e-7)
+        tau[j] ~ dgamma(.01,.01)
+        omega[j] <- 1 / sqrt(tau[j])
+    }
+
+    for(j in 1:M){                  # priors over hierarchical part
+        alpha[j] ~ dnorm(0, 1)
+    }
+
+    # transformations to identified parameters
+    sd_x <- sd(x[1:N])
+    mn_x <- mean(x[1:N])
+    for(i in 1:N){
+        country[i] <- (x[i] - mn_x) * pow(sd_x, -1)
+    }
+    for(j in 1:K){
+        # worked with apr2015 data...
+        # should work as longs as beta = num [1:9, 1:2]
+        intercept[j] <- beta[j, 1] + beta[j, 2]*mn_x * pow(sd_x, -1)
+        load[j] <- beta[j, 2]*sd_x
+        # load[j] <- prod(beta[j, 2], sd_x)
+    }
+    for(j in 1:M){
+        region[j] <- (alpha[j] - mn_x) * pow(sd_x, -1)
+    }
+}
