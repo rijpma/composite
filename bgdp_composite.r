@@ -152,7 +152,7 @@ for (vrb in vrbs){
 }
 
 # texreg(mlist, stars = c(0.01, 0.05, 0.1), 
-#   caption='Regression of wellbeing indicators on country-average life satisfaction responses in the WVS.',
+#   caption='Regression of country-average life satisfaction responses in the WVS on wellbeing indicators',
 #   label='tab:satreg',
 #   float.pos='h',
 #   custom.coef.names=c('Log(GDPpc)', '1981-4', '1990-3', '1999-2001', lngvrbs[vrbs]))
@@ -202,8 +202,11 @@ gelman.diag(postr[, grep('load', colnames(postr[[1]]))])
 
 # plot(postr[, grep('load', colnames(postr[[1]]))])
 # plot(postr[, grep('region', colnames(postr[[1]]))])
+# plot(postr[, grep('country', colnames(postr[[1]]))])
+# plot(postr[, grep('intercept', colnames(postr[[1]]))])
 # # etc. 
 
+save(postr, file = "~/downloads/data/bgdp_data.rda")
 
 loads = extract(postr, "load")
 loadsbar = sumstatsDF(loads)
@@ -223,6 +226,8 @@ countriesbar$region = y$region
 countriesbar$decade = y$decade
 countriesbar$gdp = y$gdp
 countriesbar$gdp_std = scale(countriesbar$gdp)
+
+write.csv(countriesbar, "composite_country_estimates.csv", row.names = F, na = "")
 
 regions = extract(postr, "region")
 regionsbar = sumstatsDF(regions)
